@@ -53,6 +53,7 @@ short_ref_format=$(jq -r '(.params.short_ref_format // "%s")' <<< "$payload")
 timestamp_format=$(jq -r '(.params.timestamp_format // "iso8601")' <<< "$payload")
 describe_ref_options=$(jq -r '(.params.describe_ref_options // "--always --dirty --broken")' <<< "$payload")
 search_remote_refs_flag=$(jq -r '(.source.search_remote_refs // false)' <<< "$payload")
+sparse_paths="$(jq -r '(.source.sparse_paths // ["."])[]' <<< "$payload")"
 
 # If params not defined, get it from source
 if [ -z "$fetch_tags" ] || [ "$fetch_tags" == "null" ]  ; then
@@ -94,7 +95,7 @@ if [ "$disable_git_lfs" == "true" ]; then
   export GIT_LFS_SKIP_SMUDGE=1
 fi
 
-git clone --single-branch $depthflag $uri $branchflag $destination $tagflag
+git clone -n --depth=1 --filter=tree:0 --single-branch $depthflag $uri $branchflag $destination $tagflag
 
 cd $destination
 
@@ -112,6 +113,11 @@ else
       echo "WARNING: couldn't find a ref for $ref listed on the remote"
     fi
   fi
+
+  if [ -n "$sparse_paths" ]
+    git sparse-checkout set --no-cone $sparse_paths
+  fi
+  
   git checkout -q "$ref"
 fi
 

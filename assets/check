@@ -56,7 +56,7 @@ else
     branchflag="--branch $branch"
   fi
 
-  git clone --single-branch $uri $branchflag $destination $tagflag
+  git clone -n --depth=1 --filter=tree:0 --single-branch $uri $branchflag $destination $tagflag
   cd $destination
 fi
 
